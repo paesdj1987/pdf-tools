@@ -1,0 +1,25 @@
+📂 Projeto de Edição de PDF
+│
+├── app.py                  # ponto de entrada da aplicação FastAPI
+├── requirements.txt        # dependências principais
+├── requirements_qa.txt     # dependências extras (QA/testes)
+├── estrutura.txt           # documentação da estrutura
+├── projeto.txt             # anotações gerais do projeto
+│
+├── 📂 backend               # API em FastAPI (processamento do PDF)
+│   ├── __init__.py
+│   ├── api_apply.py        # endpoint principal para aplicar alterações no PDF
+│   ├── manual.py           # rota do manual de utilização
+│
+├── 📂 frontend              # interface web (layouts, CSS e JS)
+│   ├── __init__.py
+│   ├── layout_campo.py     # layout da área de edição (inserir campo, texto, imagem)
+│   ├── layout_inicial.py   # layout da tela inicial (cards, hero, botões)
+│   ├── ui_css.py           # estilos customizados (toast, grid, hero, etc.)
+│   └── ui_js.py            # lógica do frontend (showToast, ensurePDF, etc.)
+│
+├── 📂 Assets              # interface web (layouts, CSS e JS)
+│   ├── logo.png
+│   └── manual_de_utilizacao.pdf      # (coloque aqui quando tiver)
+│
+└── 📂 venv                  # ambiente virtual Python (ignorar em versionamento)

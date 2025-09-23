@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  edit_pdf:
+    build:
+      context: .
+    image: edit_pdf:latest
+    container_name: edit_pdf_app
+    ports:
+      - "8055:8055"
+    environment:
+      - MAX_UPLOAD_MB=50
+      - DISABLE_DOCS=0
+      - ALLOWED_ORIGINS=*
+    volumes:
+      - ./assets:/app/assets:ro
+      - ./frontend:/app/frontend
+      - ./backend:/app/backend
+      - ./app.py:/app/app.py
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8055/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

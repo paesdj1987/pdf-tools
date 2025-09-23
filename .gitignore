@@ -1,0 +1,24 @@
+# Pastas que não precisam ir pro Git
+venv/
+.vscode/
+__pycache__/
+backup/
+
+# Arquivos temporários do Python
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.Python
+
+# Logs
+*.log
+
+# Build / dist
+dist/
+build/
+
+# Sistema
+.DS_Store
+Thumbs.db
