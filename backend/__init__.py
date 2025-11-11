@@ -6,8 +6,8 @@ from .api_apply import router as apply_router
 
 # Novos módulos (converter / OCR)
 from .api_convert_word import router as convert_word_router
-# from .api_convert_excel import router as convert_excel_router   # ← use quando criar
-# from .ocr_apply import router as ocr_router                    # ← futuro OCR backend
+# from .api_convert_excel import router as convert_excel_router   
+# from .ocr_apply import router as ocr_router                    
 
 router = APIRouter()
 
