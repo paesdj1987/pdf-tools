@@ -3,7 +3,10 @@ starlette==0.47.3
 uvicorn[standard]==0.35.0
 python-multipart==0.0.20
 pymupdf==1.26.4
+pdf2docx>=0.5.6
+python-docx>=0.8.11
+ocrmypdf>=14.0.0
 
-#ocrmypdf
+
 #tesseract
 

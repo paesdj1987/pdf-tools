@@ -2,6 +2,7 @@ from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks, HTTPExce
 from fastapi.responses import FileResponse
 import tempfile, os, json, base64, re, math
 import fitz  # PyMuPDF
+import traceback
 
 router = APIRouter()
 
@@ -23,14 +24,43 @@ def _parse_json(s: str, default):
     except Exception:
         return default
 
-def _hex_to_rgb01(color: str):
-    if not color:
-        return (0, 0, 0)
-    c = color.strip()
-    if not c.startswith("#"):
-        c = "#" + c
-    h = c[1:].ljust(6, "0")[:6]
-    return (int(h[0:2], 16) / 255.0, int(h[2:4], 16) / 255.0, int(h[4:6], 16) / 255.0)
+def _hex_to_rgb01(s: str):
+    """
+    Aceita: #RRGGBB, #RGB, RRGGBB, rgb(r,g,b), rgba(r,g,b,a)  -> (r,g,b) em 0..1
+    """
+    try:
+        if not s:
+            return (0.0, 0.0, 0.0)
+        s = str(s).strip()
+
+        # rgb/rgba(...)
+        if s.lower().startswith("rgb"):
+            import re
+            m = re.match(r"rgba?\s*\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})", s, re.I)
+            if m:
+                r, g, b = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+                return (max(0, min(255, r))/255.0,
+                        max(0, min(255, g))/255.0,
+                        max(0, min(255, b))/255.0)
+
+        # remove # se vier sem
+        if s.startswith("#"):
+            s = s[1:]
+
+        # #RGB → #RRGGBB
+        if len(s) == 3 and all(c in "0123456789abcdefABCDEF" for c in s):
+            s = "".join([c*2 for c in s])
+
+        if len(s) == 6 and all(c in "0123456789abcdefABCDEF" for c in s):
+            r = int(s[0:2], 16) / 255.0
+            g = int(s[2:4], 16) / 255.0
+            b = int(s[4:6], 16) / 255.0
+            return (r, g, b)
+
+    except Exception:
+        pass
+    return (0.0, 0.0, 0.0)
+
 
 def _normrect_to_rect(page, x, y, w, h):
     W, H = float(page.rect.width), float(page.rect.height)
@@ -59,7 +89,7 @@ def _base_widget_style(w: fitz.Widget):
 # ----------------- Adição de Widgets (Form) --------------
 # =========================================================
 def _add_text_widget(page, name: str, rect: fitz.Rect):
-    """Campo de texto com leve borda e fundo claro (melhor UX)."""
+    """Campo de texto com leve borda e fundo claro."""
     w = fitz.Widget()
     w.field_name   = name or "campo"
     w.field_type   = fitz.PDF_WIDGET_TYPE_TEXT
@@ -160,14 +190,9 @@ def _wrap_words(line_text: str, W: float, fs: float, fn: str):
     return out
 
 def _fit_lines_to_box(lines, rect: fitz.Rect, fs: float, fn: str):
-    """
-    Reduz o tamanho da fonte até que as linhas caibam na largura e altura do retângulo.
-    Retorna (font_size_final, linhas_recomputadas)
-    """
     # laço com limite para evitar loops
     for _ in range(12):
         lh = fs * 1.2
-        # mede maior largura
         max_w_line = 0.0
         for ln in lines:
             max_w_line = max(max_w_line, _tlen(ln, fs, fn))
@@ -182,7 +207,7 @@ def _fit_lines_to_box(lines, rect: fitz.Rect, fs: float, fn: str):
         # calcula fator de redução por largura/altura
         f_w = rect.width / max(1.0, max_w_line)
         f_h = rect.height / max(1.0, need_h)
-        f = min(f_w, f_h) * 0.98  # margem de segurança
+        f = min(f_w, f_h) * 0.98  
 
         new_fs = max(6.0, fs * f)
         if abs(new_fs - fs) < 0.25:
@@ -217,19 +242,24 @@ def _insert_text(page, rect: fitz.Rect, text: str, font: str, size: float, color
     # auto-ajuste de fonte para caber
     fs, lines = _fit_lines_to_box(lines, r, fs, fn)
     lh = fs * 1.2
-    cur_y = r.y0 + fs  # baseline da 1ª linha
+    cur_y = r.y0 + fs  
 
     for ln in lines:
-        if cur_y > r.y1 + 0.5:  # margem
+        if cur_y > r.y1 + 0.5:  
             break
         tw = _tlen(ln, fs, fn)
-        if align_pdf == 1:    # center
+        if align_pdf == 1:    
             x = r.x0 + (r.width - tw) / 2
-        elif align_pdf == 2:  # right
+        elif align_pdf == 2:  
             x = r.x1 - tw
-        else:                 # left
+        else:                
             x = r.x0
-        page.insert_text((x, cur_y), ln, fontsize=fs, fontname=fn, color=rgb, render_mode=0)
+        # texto (tenta com a fonte pedida; se der ruim, cai para helv)
+        try:
+            page.insert_text((x, cur_y), ln, fontsize=fs, fontname=fn, color=rgb, render_mode=0)
+        except Exception:
+            page.insert_text((x, cur_y), ln, fontsize=fs, fontname="helv", color=rgb, render_mode=0)
+
         cur_y += lh
 
 def _insert_image(page, rect: fitz.Rect, data_url: str):
@@ -313,7 +343,7 @@ def _center_dist(r1: fitz.Rect, r2: fitz.Rect) -> float:
     return math.hypot(c1[0]-c2[0], c1[1]-c2[1])
 
 def _delete_widget(page, widget: fitz.Widget) -> bool:
-    """Tenta deletar o widget com o método disponível nesta versão do PyMuPDF."""
+    """Deletar o widget."""
     try:
         page.delete_widget(widget)
         return True
@@ -330,12 +360,6 @@ def _delete_widget(page, widget: fitz.Widget) -> bool:
     return False
 
 def _remove_widgets_by_selectors(doc: fitz.Document, removals_data):
-    """
-    removals_data: lista de seletores. Cada item pode conter:
-      - {"page": 0-based, "name": "CampoXYZ"}          -> match por field_name
-      - {"page": 0-based, "xref": 1234}                -> match por xref (se fornecido)
-      - {"page": 0-based, "x":0.1,"y":0.2,"w":0.15,"h":0.03} -> match geométrico
-    """
     if not isinstance(removals_data, list) or not removals_data:
         return 0
 
@@ -404,12 +428,13 @@ def _remove_widgets_by_selectors(doc: fitz.Document, removals_data):
 # ---------------------- Redactions -----------------------
 # =========================================================
 def _apply_redactions(doc: fitz.Document, redactions_data):
-    """
-    redactions_data: lista de retângulos normalizados para remover conteúdo fixo.
-      Ex.: [{"page":0,"x":0.12,"y":0.34,"w":0.2,"h":0.05,"fill":"#FFFFFF"}]
-    """
     if not isinstance(redactions_data, list) or not redactions_data:
         return 0
+
+    # ajuste fino em pontos (1 pt = 1/72")
+    SHRINK_ALL_PT = 0.75            
+    SHRINK_BOTTOM_EXTRA_PT = 1.00    
+    MIN_SIDE_PT = 0.5                
 
     added = 0
     for rd in redactions_data:
@@ -430,6 +455,18 @@ def _apply_redactions(doc: fitz.Document, redactions_data):
         )
         # Cor de preenchimento (padrão branco)
         fill = _hex_to_rgb01(rd.get("fill") or "#FFFFFF")
+
+        # ---- encolhe o retângulo para não pegar linhas adjacentes ----
+        rx0 = rect.x0 + SHRINK_ALL_PT
+        ry0 = rect.y0 + SHRINK_ALL_PT
+        rx1 = rect.x1 - SHRINK_ALL_PT
+        ry1 = rect.y1 - (SHRINK_ALL_PT + SHRINK_BOTTOM_EXTRA_PT)
+
+        # garante dimensões mínimas/ordem correta
+        if (rx1 - rx0) < MIN_SIDE_PT: rx1 = rx0 + MIN_SIDE_PT
+        if (ry1 - ry0) < MIN_SIDE_PT: ry1 = ry0 + MIN_SIDE_PT
+
+        rect = fitz.Rect(rx0, ry0, rx1, ry1)
 
         try:
             page.add_redact_annot(rect, fill=fill)
@@ -454,6 +491,7 @@ def _apply_redactions(doc: fitz.Document, redactions_data):
 
     return added
 
+
 # =========================================================
 # ------------------------ Endpoint -----------------------
 # =========================================================
@@ -467,16 +505,6 @@ def apply_fields(
     removals: str = Form("[]"),    
     redactions: str = Form("[]"),  
 ):
-    """
-    Espera JSON nos campos:
-      - fields:    [{page,x,y,w,h,name,ftype}]  ftype in {"text","checkbox","radio"}
-      - draws:     [{kind,page,x,y,w,h,...}]    kind in {"text","image","circle"}
-      - state:     snapshot do front (fallback)
-      - removals:  [{page, name}|{page, xref}|{page,x,y,w,h}]
-      - redactions:[{page,x,y,w,h, fill?}]
-    Coordenadas x,y,w,h normalizadas (0..1).
-    Endpoint final exposto como /api/apply (prefixo configurado no include_router).
-    """
     src = _safe_tmp_copy(file)
     try:
         fields_data    = _parse_json(fields,    [])
@@ -515,33 +543,69 @@ def apply_fields(
             else:
                 _add_text_widget(page, f.get("name"), rect)
 
-        # 2) Desenhos fixos (texto, imagem, círculos)
+      # 2) Desenhos fixos (texto, imagem, círculos)
+        def _safe_float(v, default=0.0):
+            try:
+                return float(v)
+            except Exception:
+                return float(default)
+
         drew_any = False
         for d in draws_data:
-            kind = (d.get("kind") or "").lower()
             try:
-                pidx = int(d.get("page", 0))
+                kind = (d.get("kind") or "").lower()
+                pidx = int(d.get("page", 0) or 0)
             except Exception:
-                pidx = 0
+                kind, pidx = "", 0
+
             if not (0 <= pidx < len(doc)):
                 continue
-            page = doc[pidx]
-            rect = _normrect_to_rect(page, d.get("x",0), d.get("y",0), d.get("w",0), d.get("h",0))
 
-            if kind == "text":
-                _insert_text(page, rect,
-                             text=d.get("text") or "",
-                             font=d.get("font") or "helv",
-                             size=d.get("size") or 12,
-                             color_hex=d.get("color") or "#000000",
-                             align_pdf=_align_to_pdf(d.get("align") or 0))
-                drew_any = True
-            elif kind == "image":
-                _insert_image(page, rect, d.get("data") or "")
-                drew_any = True
-            elif kind == "circle":
-                _draw_circle(page, rect)
-                drew_any = True
+            page = doc[pidx]
+            rect = _normrect_to_rect(
+                page,
+                _safe_float(d.get("x", 0)),
+                _safe_float(d.get("y", 0)),
+                _safe_float(d.get("w", 0)),
+                _safe_float(d.get("h", 0)),
+            )
+
+            try:
+                if kind == "text":
+                    _insert_text(
+                        page, rect,
+                        text=d.get("text") or "",
+                        font=d.get("font") or "helv",  # virá mapeada (helv / bold / oblique / boldoblique)
+                        size=_safe_float(d.get("size", 12.0), 12.0),
+                        color_hex=d.get("color") or "#000000",
+                        align_pdf=_align_to_pdf(d.get("align") or 0),
+                    )
+
+                    # Sublinhado opcional (sem mexer na assinatura do _insert_text)
+                    if bool(d.get("underline", False)):
+                        rgb = _hex_to_rgb01(d.get("color") or "#000000")
+                        # sublinha a última linha do bloco (aprox. pela base do rect)
+                        y_line = rect.y1 - max(0.10 * _safe_float(d.get("size", 12.0), 12.0), 0.6)
+                        sh = page.new_shape()
+                        sh.draw_line((rect.x0, y_line), (rect.x1, y_line))
+                        sh.finish(color=rgb, width=max(0.08 * _safe_float(d.get("size", 12.0), 12.0), 0.6))
+                        sh.commit()
+
+                    drew_any = True
+
+                elif kind == "image":
+                    _insert_image(page, rect, d.get("data") or "")
+                    drew_any = True
+
+                elif kind == "circle":
+                    _draw_circle(page, rect)
+                    drew_any = True
+
+            except Exception as e:
+                print("Erro ao processar elemento:", kind, "->", repr(e))
+                traceback.print_exc()
+                continue
+
 
         # 3) Fallback: se nada em draws, tenta reconstruir do snapshot
         if not drew_any and state_data_str and state_data_str not in ("[]","null","None"):

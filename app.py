@@ -81,8 +81,8 @@ else:
     )
 
 # ========= Routers =========
-app.include_router(frontend_router)           # rotas de páginas
-app.include_router(backend_router, prefix="") # API (/api/...)
+app.include_router(frontend_router)           
+app.include_router(backend_router, prefix="") 
 
 # ========= Healthcheck =========
 @app.get("/healthz", tags=["infra"])

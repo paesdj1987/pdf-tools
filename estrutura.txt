@@ -17,7 +17,7 @@
 │   ├── layout_inicial.py   # layout da tela inicial (cards, hero, botões)
 │   ├── ui_css.py           # estilos customizados (toast, grid, hero, etc.)
 │   └── ui_js.py            # lógica do frontend (showToast, ensurePDF, etc.)
-│   └── ui_js.py            # lógica do frontend (showToast, ensurePDF, etc.)
+│   └── ocr_provisorio.py   # lógica do frontend (modulo ocr - em construção)
 │
 ├── 📂 Assets              # interface web (layouts, CSS e JS)
 │   ├── logo.png

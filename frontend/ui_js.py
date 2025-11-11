@@ -55,6 +55,16 @@ JS_EDITOR = r"""
   const tpAlignL=document.getElementById('tpAlignL');
   const tpAlignC=document.getElementById('tpAlignC');
   const tpAlignR=document.getElementById('tpAlignR');
+  
+  tpColor.addEventListener('input', () => {
+  if (selected.el && selected.type === 'text') {
+    const newColor = normalizeColorToHex(tpColor.value);
+    selected.el.style.color = newColor;
+    if (selected.style) selected.style.color = newColor;
+    saveSnapshot();
+  }
+});
+
 
     // --- Regra: Checkbox só com quadrado ---
   function enforceCheckboxSquare(showMsg = true){
@@ -131,7 +141,7 @@ JS_EDITOR = r"""
     el.style.fontWeight = st.bold ? '700' : '400';
     el.style.fontStyle  = st.italic ? 'italic' : 'normal';
     el.style.textDecoration = st.underline ? 'underline' : 'none';
-    el.style.color      = st.color || '#000000';
+    el.style.color = normalizeColorToHex(st?.color || '#000000');
     el.style.textAlign  = cssAlign(st.align);
     el.dataset.style = JSON.stringify(st);
     enforceMinHeightForTextEl(el);
@@ -687,11 +697,23 @@ JS_EDITOR = r"""
 
   [tpFont,tpSize,tpBold,tpItalic,tpUnderline,tpColor,tpAlignL,tpAlignC,tpAlignR].forEach(el=>{
     el.addEventListener('click', ()=>{
+      // Alinhamento
       if(el===tpAlignL) setAlign('left');
       if(el===tpAlignC) setAlign('center');
       if(el===tpAlignR) setAlign('right');
-      if(selected.el && selected.type==='text'){ applyStyleToElement(selected.el, getCurrentTextStyle()); saveSnapshot(); }
+
+      // B / I / U precisam alternar o aria-pressed
+      if (el===tpBold || el===tpItalic || el===tpUnderline) {
+        toggleBtn(el, !isOn(el));
+      }
+
+      // Aplica no texto selecionado (se houver)
+      if (selected.el && selected.type==='text') {
+        applyStyleToElement(selected.el, getCurrentTextStyle());
+        saveSnapshot();
+      }
     });
+
     el.addEventListener('change', ()=>{
       if(selected.el && selected.type==='text'){ applyStyleToElement(selected.el, getCurrentTextStyle()); saveSnapshot(); }
     });
@@ -757,31 +779,67 @@ JS_EDITOR = r"""
   function redo(){ if(!S.redo.length) return; const next=S.redo.pop(); S.history.push(next); restore(next); }
 
   function alignToPDF(a){ return a==='center'?1:(a==='right'?2:0); }
-  function mapFontToPDF(style){
-    const fam = (style.font||'Arial').toLowerCase();
-    const base = fam.includes('times') ? 'ti' : (fam.includes('courier') ? 'cour' : 'helv');
-    const b = style.bold, i = style.italic;
-    if(base==='helv'){
-      if(b && i) return 'helv-BoldOblique';
-      if(b) return 'helv-Bold';
-      if(i) return 'helv-Oblique';
-      return 'helv';
+  // nomes válidos: helv, helv-bold, helv-oblique, helv-boldoblique
+  // Converte a escolha do usuário (Arial / Times / Courier + B/I) para nomes válidos do PyMuPDF
+  // Helvetica: helv / helv-bold / helv-oblique / helv-boldoblique
+  // Times:     times-roman / times-bold / times-italic / times-bolditalic
+  // Courier:   courier / courier-bold / courier-oblique / courier-boldoblique
+  function mapFontToPDF(st) {
+    const fam = String(st?.font || 'Arial').toLowerCase();
+    const b = !!st?.bold, i = !!st?.italic;
+
+    const isArial   = fam.includes('arial');           // “Arial” => Helvetica base
+    const isTimes   = fam.includes('times');           // “Times New Roman”
+    const isCourier = fam.includes('courier');         // “Courier New”
+
+    if (isTimes) {
+      if (b && i) return 'times-bolditalic';
+      if (b)      return 'times-bold';
+      if (i)      return 'times-italic';
+      return 'times-roman';
     }
-    if(base==='ti'){
-      if(b && i) return 'ti-BoldItalic';
-      if(b) return 'ti-Bold';
-      if(i) return 'ti-Italic';
-      return 'ti';
+    if (isCourier) {
+      if (b && i) return 'courier-boldoblique';
+      if (b)      return 'courier-bold';
+      if (i)      return 'courier-oblique';
+      return 'courier';
     }
-    if(base==='cour'){
-      if(b && i) return 'cour-BoldOblique';
-      if(b) return 'cour-Bold';
-      if(i) return 'cour-Oblique';
-      return 'cour';
-    }
+    // default: Helvetica (compat “Arial”)
+    if (b && i) return 'helv-boldoblique';
+    if (b)      return 'helv-bold';
+    if (i)      return 'helv-oblique';
     return 'helv';
   }
 
+  function normalizeColorToHex(c) {
+    if (!c) return '#000000';
+    c = String(c).trim();
+
+    // já está em #RRGGBB
+    if (/^#([A-Fa-f0-9]{6})$/.test(c)) return c.toLowerCase();
+
+    // #RGB → #RRGGBB
+    if (/^#([A-Fa-f0-9]{3})$/.test(c)) {
+      return ('#' + c[1]+c[1] + c[2]+c[2] + c[3]+c[3]).toLowerCase();
+    }
+
+    // rgb/rgba → #RRGGBB
+    const m = c.match(/^rgba?\s*\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/i);
+    if (m) {
+      const r = Math.max(0, Math.min(255, parseInt(m[1], 10)));
+      const g = Math.max(0, Math.min(255, parseInt(m[2], 10)));
+      const b = Math.max(0, Math.min(255, parseInt(m[3], 10)));
+      const toHex = (n) => n.toString(16).padStart(2, '0');
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    }
+
+    // fallback: se vier sem # mas com 6 hex
+    if (/^[A-Fa-f0-9]{6}$/.test(c)) return ('#' + c).toLowerCase();
+
+    return '#000000';
+  }
+
+  
   async function applyChanges(){
     const fields=[]; const draws=[];
     const removals=[]; const redactions=[];
@@ -795,9 +853,18 @@ JS_EDITOR = r"""
         const r=b.rect();
         const st = r.style || defaultStyle;
         draws.push({
-          kind:'text', page:pi, x:r.x, y:r.y, w:r.w, h:r.h, text:r.text||'',
-          font: mapFontToPDF(st), size: st.size||10, color: st.color||'#000000', align: (st.align==='center'?1:(st.align==='right'?2:0))
+          kind: 'text',
+          page: pi,
+          x: r.x, y: r.y, w: r.w, h: r.h,
+          text: r.text || '',
+          font: mapFontToPDF(st),
+          size: st.size || 10,
+          color: normalizeColorToHex(st.color || '#000000'),   // <<<<<< AQUI
+          align: (st.align === 'center' ? 1 : (st.align === 'right' ? 2 : 0))
+          // underline: !!st.underline   // se/quando quiser reativar
         });
+
+
       });
       p.images.forEach(b=>{ const r=b.rect(); draws.push({ kind:'image', page:pi, x:r.x, y:r.y, w:r.w, h:r.h, data:r.data }); });
 

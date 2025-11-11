@@ -145,7 +145,14 @@ body{
 .img-box{ position:absolute; min-width:40px; min-height:40px; cursor:move; resize:both; overflow:hidden; border-radius:6px; border:1px dashed #9aa4b2; background:rgba(255,255,255,.6) }
 .img-box img{ width:100%; height:100%; object-fit:contain; display:block }
 
-.rubber{ position:absolute; border:2px dashed #22d3ee; background:rgba(34,211,238,.10); border-radius:6px; pointer-events:none; }
+.rubber {
+  box-sizing: content-box; /* <-- adicione isto */
+  position: absolute;
+  border: 2px dashed #22d3ee;
+  background: rgba(34,211,238,.10);
+  border-radius: 6px;
+  pointer-events: none;
+}
 
 .toast {
   visibility: hidden;

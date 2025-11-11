@@ -28,7 +28,7 @@ def home():
     color:var(--ink); background:
       radial-gradient(1200px 700px at 80% -10%, rgba(124,58,237,.10), transparent),
       radial-gradient(1000px 700px at -10% -10%, rgba(34,211,238,.08), transparent),
-      var(--bg);
+      linear-gradient(180deg, rgba(11,15,22,1) 0%, rgba(11,15,22,0.95) 100%);
     overflow-x:hidden;
   }
   body::before{
@@ -104,6 +104,25 @@ def home():
     box-shadow: 0 12px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
     position:relative; transform-style:preserve-3d;
     transition: transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .18s ease, border-color .18s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* empurra o botão pro fim */
+    min-height: 230px; /* ajuste opcional pra garantir uniformidade */
+  }
+  /* NOVO BLOCO - uniformiza altura e alinhamento interno */
+  .card h3,
+  .card p {
+    text-align: left;        /* mantém alinhado à esquerda */
+  }
+
+  .card h3 {
+    min-height: 28px;        /* garante altura fixa do título */
+  }
+
+  .card p {
+    min-height: 48px;        /* força mesmo espaço entre cards */
+    display: flex;
+    align-items: flex-start;  /* texto sempre inicia alinhado em cima */
   }
   .card::before{
     content:""; position:absolute; inset:0; border-radius:inherit; padding:1px;
@@ -119,11 +138,29 @@ def home():
   }
   .card:hover::before{ opacity:.9 }
 
-  .icon{
-    width:40px; height:30px; display:flex; align-items:center; justify-content:center;
-    border-radius:12px; color:#fff; background:linear-gradient(135deg,#22c55e,#16a34a);
-    box-shadow: 0 6px 18px rgba(34,197,94,.35);
+  .icon {
+    width: 40px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    color: #fff;
+    background: linear-gradient(135deg, #4ade80, #22c55e);
+    box-shadow: 0 4px 14px rgba(34, 197, 94, 0.25);
   }
+
+  /* ---- Cores ---- */
+  .icon.edit,
+  .icon.ocr,
+  .icon.word,
+  .icon.excel {
+    background: linear-gradient(135deg, #e5e7eb, #d1d5db); /* cinza claro moderno */
+    box-shadow: 0 4px 14px rgba(229, 231, 235, 0.25);       /* sombra suave */
+    color: #1e293b; /* opcional: melhora contraste de ícones escuros */
+  }
+
+
   .card h3{ margin:12px 0 6px; font-size:22px }
   .card p{ margin:0; color:var(--muted) }
   .actions{ margin-top:14px }
@@ -161,23 +198,44 @@ def home():
     </div>
   </section>
 
-  <section class="home-grid fade-in" style="animation-delay:.06s">
-    <!-- Card 1: Editor -->
+    <section class="home-grid fade-in" style="animation-delay:.06s">
+
+    <!-- Card 1: Editar PDF -->
     <div class="card" id="tool-card">
-      <div class="icon">🛠️</div>
+      <div class="icon edit"><img src="/assets/editpdf.png" alt="Editar" style="width:24px;height:24px;object-fit:contain;"></div>
       <h3>Editar PDF</h3>
       <p>Insira Texto, Imagem, Campo de Seleção de Texto e Remova Texto/Imagem no PDF.</p>
-      <div class="actions"><a class="btn outline" href="/inserir">Abrir</a></div>
+      <div class="actions"><a class="btn outline" href="/editar">Abrir</a></div>
     </div>
 
     <!-- Card 2: OCR -->
     <div class="card">
-      <div class="icon">✨</div>
+      <div class="icon ocr"><img src="/assets/ocr.png" alt="OCR" style="width:24px;height:24px;object-fit:contain;"></div>
       <h3>OCR PDF</h3>
       <p>Converta um PDF escaneado em documento pesquisável.</p>
       <div class="actions"><a class="btn outline" href="/ocr">Abrir</a></div>
     </div>
+
+    <!-- Card 3: PDF → Word -->
+    <div class="card">
+      <div class="icon word"><img src="/assets/word.png" alt="Word" style="width:24px;height:24px;object-fit:contain;"></div>
+      <h3>Converter PDF para Word</h3>
+      <p>Gere um arquivo .docx a partir do seu PDF (modo layout ou texto).</p>
+      <div class="actions"><a class="btn outline" href="/converter-word">Abrir</a></div>
+    </div>
+
+    <!-- Card 4: PDF → Excel -->
+    <div class="card">
+      <div class="icon excel"><img src="/assets/excel.png" alt="Excel" style="width:24px;height:24px;object-fit:contain;"></div>
+      <h3>Converter PDF para Excel</h3>
+      <p>Extraia tabelas do PDF e exporte para planilha .xlsx.</p>
+      <div class="actions"><a class="btn outline" href="/converter-excel">Abrir</a></div>
+    </div>
+
+
+
   </section>
+
 
   <script>
     // Tilt 3D suave no card principal (sem libs)

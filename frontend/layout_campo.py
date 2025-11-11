@@ -6,7 +6,7 @@ from .ui_js import JS_EDITOR
 
 router = APIRouter()
 
-@router.get("/inserir", response_class=HTMLResponse)
+@router.get("/editar", response_class=HTMLResponse)
 def inserir():
     html = f"""
 <!doctype html>
