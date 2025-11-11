@@ -23,9 +23,4 @@ services:
       timeout: 5s
       retries: 3
 
-    # 🔸 Dependências/variáveis opcionais para OCR (comentadas por enquanto)
-    # environment:
-    #   - OCR_LANG=por
-    #   - OCR_FORCE=true
-    # volumes:
-    #   - ./ocr_data:/app/ocr_data
+
