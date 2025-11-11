@@ -22,5 +22,4 @@
 ├── 📂 Assets              # interface web (layouts, CSS e JS)
 │   ├── logo.png
 │   └── manual_de_utilizacao.pdf      # (coloque aqui quando tiver)
-│
-└── 📂 venv                  # ambiente virtual Python (ignorar em versionamento)
+
