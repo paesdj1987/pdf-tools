@@ -130,7 +130,6 @@ editar_pdf/
 │   └── ui_js.py                  # Scripts JS da interface (eventos, formatação, aplicação de estilo)
 │
 ├── backup/                       # (opcional) versões antigas, dumps ou cópias de segurança
-│
 ```
 
 ---
