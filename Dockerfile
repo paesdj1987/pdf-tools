@@ -7,17 +7,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# ===== Dependências do sistema =====
-# 🔸 Apenas utilitários básicos (curl)
+# Dependências do sistema 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
  && rm -rf /var/lib/apt/lists/*
 
-# 🔸 Dependências de OCR (comentadas por enquanto)
-# RUN apt-get update && apt-get install -y --no-install-recommends \
-#     tesseract-ocr tesseract-ocr-por \
-#     ocrmypdf ghostscript qpdf \
-#  && rm -rf /var/lib/apt/lists/*
 
 # Copia requirements e instala
 COPY requirements.txt .
