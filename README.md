@@ -1,4 +1,4 @@
-# 📝 editar_pdf – Aplicação FastAPI para Edição e Conversão de PDFs
+# 📝 edit_pdf – Aplicação FastAPI para Edição e Conversão de PDFs
 
 ## 📝 Descrição
 
