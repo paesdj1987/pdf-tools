@@ -128,8 +128,6 @@ editar_pdf/
 │   ├── ocr.py                    # Página de OCR (reconhecimento de texto)
 │   ├── ui_css.py                 # Estilos compartilhados da interface (CSS em strings)
 │   └── ui_js.py                  # Scripts JS da interface (eventos, formatação, aplicação de estilo)
-│
-├── backup/                       # (opcional) versões antigas, dumps ou cópias de segurança
 ```
 
 ---
