@@ -1,7 +1,7 @@
 # frontend/converter_word.py
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
-from .ui_css import CSS_EDITOR  # estilos base do editor
+from .ui_css import CSS_EDITOR
 
 router = APIRouter()
 
