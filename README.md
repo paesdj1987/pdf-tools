@@ -1,158 +1,287 @@
-# 📝 edit_pdf – Aplicação FastAPI para Edição e Conversão de PDFs
 
-## 📝 Descrição
+# PDF Tools — Edição e Conversão de Documentos
 
-**editar_pdf** é uma aplicação web construída com **Python** e **FastAPI** para editar PDFs e converter arquivos PDF para **Word (.docx)**. O app organiza rotas de frontend e backend, com páginas estilizadas, upload simples e feedback visual (toasts). Os módulos de conversão em documento pesquisável **OCR PDF** e converção de PDF em **Excel (.xlsx)** estão em construção.
+Aplicação web desenvolvida em Python e FastAPI para edição, conversão e processamento de documentos PDF.
 
----
+A solução disponibiliza ferramentas para edição de campos em documentos, personalização de textos e conversão de arquivos PDF para Word, utilizando uma arquitetura modular com separação entre frontend e backend e comunicação por APIs REST.
 
-## 📷 Capturas de Tela
+## Contexto e objetivo
 
-![Tela Inicial](assets/print/print1.png)
-![Tela Edição de PDF](assets/print/print2.png)
-![Tela Edição de PDF](assets/print/print3.png)
-![Tela Converter PDF → Word](assets/print/print4.png)
-![Tela Converter PDF → Word](assets/print/print5.png)
-![Tela Converter PDF → Word](assets/print/print6.png)
+O projeto foi desenvolvido para centralizar ferramentas de manipulação de documentos PDF em uma única aplicação web, simplificando atividades de edição e conversão de arquivos.
 
----
+A solução busca automatizar operações de processamento documental, permitindo a execução dessas atividades diretamente por meio de uma interface web.
 
-## ⚙️ Tecnologias Utilizadas
+## Funcionalidades
 
-- **Python**
-- **FastAPI** (Starlette)
-- **PyMuPDF (fitz)**
-- **pdf2docx** e **python-docx**
-- **Uvicorn**
-- **Docker/Docker Compose** (opcional)
+- Upload de documentos PDF.
+- Edição de campos em documentos.
+- Personalização de textos e estilos.
+- Formatação em negrito, itálico e sublinhado.
+- Personalização de cores dos textos.
+- Processamento de documentos com PyMuPDF.
+- Conversão de arquivos PDF para Word (.docx).
+- Modos de conversão por layout ou texto.
+- Seleção de páginas para conversão.
+- Suporte a documentos protegidos por senha.
+- Download dos documentos processados.
+- Comunicação entre frontend e backend por APIs REST.
+- Feedback visual durante o processamento.
+- Configuração de limites de upload.
+- Suporte à execução em containers Docker.
 
----
+## Interface da aplicação
 
-## 🛠️ Requisitos
+### Página inicial
 
-- Python 3.9+ instalado
-- Ambiente virtual recomendado
-- Dependências listadas em `requirements.txt`
+![Página inicial](assets/print/print1.png)
 
-Opcional:
-- Tesseract OCR e Ghostscript no PATH (quando usar OCR)
-- Docker e Docker Compose instalados
+### Editor de documentos PDF
 
----
+![Editor de PDF — Parte 1](assets/print/print2.png)
 
-## 🚀 Instalação (Local)
+![Editor de PDF — Parte 2](assets/print/print3.png)
 
-1) Clone o repositório:
+### Conversão de PDF para Word
 
-```bash
-git clone <URL_DO_REPOSITORIO>
-cd editar_pdf
+![Conversão PDF para Word — Parte 1](assets/print/print4.png)
+
+![Conversão PDF para Word — Parte 2](assets/print/print5.png)
+
+![Conversão PDF para Word — Parte 3](assets/print/print6.png)
+
+## Módulos da aplicação
+
+| Módulo | Descrição | Situação |
+|---|---|---|
+| Edição de PDF | Inserção, edição e formatação de campos em documentos PDF. | Implementado |
+| PDF para Word | Conversão de documentos PDF para arquivos DOCX. | Implementado |
+| PDF para Excel | Conversão de informações de documentos PDF para planilhas XLSX. | Em desenvolvimento |
+| OCR PDF | Reconhecimento de texto e geração de documentos PDF pesquisáveis. | Em desenvolvimento |
+
+## Arquitetura da aplicação
+
+O projeto utiliza uma estrutura modular, separando os componentes de interface, comunicação e processamento de documentos.
+
+```mermaid
+flowchart TD
+    A[Usuario] --> B[Interface Web]
+    B --> C[Upload do PDF]
+    C --> D[API REST - FastAPI]
+    D --> E[Processamento com Python]
+    E --> F[Edicao com PyMuPDF]
+    E --> G[Conversao com pdf2docx]
+    F --> H[PDF processado]
+    G --> I[Documento DOCX]
+    H --> J[Download]
+    I --> J
 ```
 
-2) Crie e ative o ambiente virtual:
+## Endpoints da API
 
-- Windows:
-  ```bash
-  python -m venv venv
-  venv\Scripts\activate
-  ```
-- Linux/Mac:
-  ```bash
-  python -m venv venv
-  source venv/bin/activate
-  ```
+| Método | Endpoint | Finalidade |
+|---|---|---|
+| POST | `/api/apply` | Aplicação de campos e geração do PDF editado. |
+| POST | `/api/convert/word` | Conversão de documentos PDF para Word. |
 
-3) Instale as dependências:
+A aplicação utiliza FastAPI para gerenciamento das rotas e processamento das requisições.
+
+## Tecnologias utilizadas
+
+| Tecnologia | Finalidade |
+|---|---|
+| Python | Desenvolvimento e processamento de documentos |
+| FastAPI | Desenvolvimento de APIs REST |
+| Starlette | Componentes e recursos do framework web |
+| PyMuPDF | Manipulação e processamento de documentos PDF |
+| pdf2docx | Conversão de arquivos PDF para Word |
+| python-docx | Manipulação de documentos DOCX |
+| HTML | Estruturação da interface |
+| CSS | Estilização dos componentes |
+| JavaScript | Interatividade e comunicação com a API |
+| Uvicorn | Servidor ASGI |
+| Docker | Containerização da aplicação |
+| Docker Compose | Configuração e execução do ambiente |
+| Git | Controle de versão |
+| GitHub | Versionamento e documentação |
+
+## Estrutura do projeto
+
+```text
+.
+├── app.py
+├── requirements.txt
+├── Dockerfile
+├── docker-compose.yaml
+├── CHANGELOG.md
+├── estrutura.txt
+├── assets/
+│   └── print/
+│       ├── print1.png
+│       ├── print2.png
+│       ├── print3.png
+│       ├── print4.png
+│       ├── print5.png
+│       └── print6.png
+├── backend/
+│   ├── __init__.py
+│   ├── api_apply.py
+│   └── api_convert_word.py
+└── frontend/
+    ├── __init__.py
+    ├── converter_word.py
+    ├── converter_excel.py
+    ├── layout_campo.py
+    ├── layout_inicial.py
+    ├── ocr.py
+    ├── ui_css.py
+    └── ui_js.py
+```
+
+## Como utilizar
+
+### Edição de PDF
+
+1. Acesse o módulo de edição de documentos.
+2. Realize o upload do arquivo PDF.
+3. Configure os campos e estilos desejados.
+4. Aplique as alterações ao documento.
+5. Realize o download do PDF processado.
+
+### Conversão de PDF para Word
+
+1. Acesse o módulo de conversão.
+2. Realize o upload do arquivo PDF.
+3. Selecione o modo e as opções de conversão.
+4. Execute o processamento.
+5. Realize o download do documento DOCX.
+
+## Como executar
+
+### Requisitos
+
+- Python 3.9 ou superior.
+- Dependências disponíveis no arquivo `requirements.txt`.
+- Docker e Docker Compose (opcional).
+- Tesseract OCR e Ghostscript para recursos opcionais de OCR.
+
+### 1. Clonar o repositório
+
+```bash
+git clone https://github.com/paesdj1987/pdf-tools.git
+cd pdf-tools
+```
+
+### 2. Criar um ambiente virtual
+
+```bash
+python -m venv .venv
+```
+
+Ativação no Windows:
+
+```bash
+.venv\Scripts\activate
+```
+
+Ativação no Linux/macOS:
+
+```bash
+source .venv/bin/activate
+```
+
+### 3. Instalar as dependências
 
 ```bash
 pip install -r requirements.txt
 ```
 
-4) Execute a aplicação:
+### 4. Executar a aplicação
 
 ```bash
 uvicorn app:app --reload --host 0.0.0.0 --port 8055
 ```
 
-A aplicação inicia em `http://127.0.0.1:8055`.
+Acesse a aplicação pelo navegador:
 
----
+http://127.0.0.1:8055
 
-## 🐳 Executar com Docker (Opcional)
+### Documentação da API
 
-Build e run com Docker:
+Quando habilitada, a documentação interativa da API pode ser acessada pelos seguintes endereços:
 
-```bash
-docker build -t editar_pdf .
-docker run -p 8055:8055 editar_pdf
-```
+- Swagger UI: http://127.0.0.1:8055/docs
+- ReDoc: http://127.0.0.1:8055/redoc
 
-Ou usando Docker Compose:
+## Executar com Docker
 
-```bash
-docker-compose up --build
-```
+Como alternativa à instalação local, o projeto disponibiliza arquivos de configuração para execução em containers.
 
-Parar e remover:
+### Docker
+
+Construir a imagem:
 
 ```bash
-docker-compose down
+docker build -t pdf-tools .
 ```
 
----
+Executar o container:
 
-## 🧭 Estrutura do Projeto
-
-```text
-editar_pdf/
-├── app.py                        # Ponto de entrada FastAPI (define rotas e serve assets)
-├── requirements.txt              # Dependências da aplicação
-├── Dockerfile                    # Build da imagem Docker
-├── docker-compose.yaml           # Orquestração local com Compose
-├── CHANGELOG.md                  # Histórico de alterações (última v1.2.0)
-├── estrutura.txt                 # Notas internas sobre estrutura e componentes
-│
-├── assets/                       # Arquivos estáticos (CSS, JS, imagens, etc.)
-│
-├── backend/                      # Lado servidor (APIs REST)
-│   ├── __init__.py               # Inicialização do módulo backend
-│   ├── api_apply.py              # Endpoint /api/apply (aplica campos e renderiza PDFs editados)
-│   ├── api_convert_word.py       # Endpoint /api/convert/word (conversão PDF → DOCX, OCR opcional)
-│
-├── frontend/                     # Interface HTML (Dash/FastAPI templating)
-│   ├── __init__.py               # Inicialização do módulo frontend
-│   ├── converter_word.py         # Página “Converter PDF → Word”
-│   ├── converter_excel.py        # Página “Converter PDF → Excel”
-│   ├── layout_campo.py           # Layout do editor de campos (B/I/U, cor, etc.)
-│   ├── layout_inicial.py         # Página inicial (menu principal e redirecionamentos)
-│   ├── ocr.py                    # Página de OCR (reconhecimento de texto)
-│   ├── ui_css.py                 # Estilos compartilhados da interface (CSS em strings)
-│   └── ui_js.py                  # Scripts JS da interface (eventos, formatação, aplicação de estilo)
+```bash
+docker run -p 8055:8055 pdf-tools
 ```
 
----
+### Docker Compose
 
-## 🗺️ Páginas e Funcionalidades
+Construir e iniciar o ambiente:
 
-- Converter PDF → Word: upload, modo (Layout/Text), OCR opcional, páginas e senha.
-- Feedback visual: status, toasts e botão “Converter” com loading e spinner.
-- Download do arquivo `.docx` gerado.
-- Servir assets estáticos via `/assets`.
+```bash
+docker compose up --build
+```
 
----
+Encerrar o ambiente:
 
-## 🔧 Configuração
+```bash
+docker compose down
+```
 
-- Variáveis de ambiente:
-  - `MAX_UPLOAD_MB`: limite de upload (MB). Default: 50.
-  - `DISABLE_DOCS`: desativa docs (`/docs`, `/redoc`). `1` para desabilitar.
-  - `TRUSTED_HOSTS`: hosts confiáveis (separados por vírgula).
-  - `ALLOWED_ORIGINS`: CORS (separados por vírgula).
-- OCR (opcional): instale Tesseract e Ghostscript e garanta-os no PATH.
+## Configurações
 
----
+A aplicação disponibiliza variáveis de ambiente para personalização das configurações de execução.
 
-## 👤 Autor
+| Variável | Descrição | Valor padrão informado |
+|---|---|---|
+| `MAX_UPLOAD_MB` | Limite máximo de upload em megabytes. | 50 |
+| `DISABLE_DOCS` | Desabilita a documentação da API quando configurada como `1`. | — |
+| `TRUSTED_HOSTS` | Lista de hosts confiáveis, separados por vírgula. | — |
+| `ALLOWED_ORIGINS` | Origens permitidas nas configurações de CORS. | — |
 
-Desenvolvido por João Danilo
+Para utilização dos recursos opcionais de OCR, o Tesseract e o Ghostscript devem estar instalados e disponíveis no PATH do sistema.
+
+## Competências aplicadas
+
+- Processamento e manipulação de documentos.
+- Automação de processos.
+- Conversão entre formatos de arquivos.
+- Processamento de dados não estruturados.
+- Desenvolvimento de APIs REST.
+- Desenvolvimento frontend e backend.
+- Arquitetura modular de aplicações.
+- Integração entre componentes de software.
+- Configuração de aplicações web.
+- Containerização com Docker.
+- Versionamento de código.
+
+## Observações
+
+A qualidade da conversão dos documentos pode variar de acordo com a estrutura, a formatação e as características do arquivo PDF original.
+
+Os módulos de conversão para Excel e reconhecimento de texto para geração de PDFs pesquisáveis encontram-se em desenvolvimento.
+
+## Autor
+
+**João Paes**
+
+- [GitHub](https://github.com/paesdj1987)
+- [LinkedIn](https://www.linkedin.com/in/joao-paes87)
+- [Portfólio](https://joao-paes.vercel.app/)
 
