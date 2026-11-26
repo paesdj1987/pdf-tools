@@ -6,9 +6,8 @@ import traceback
 
 router = APIRouter()
 
-# =========================================================
 # -------------------------- Utils ------------------------
-# =========================================================
+
 def _safe_tmp_copy(upload: UploadFile) -> str:
     ext = os.path.splitext(upload.filename or "")[1] or ".pdf"
     with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
@@ -85,9 +84,7 @@ def _base_widget_style(w: fitz.Widget):
     except Exception:
         pass
 
-# =========================================================
 # ----------------- Adição de Widgets (Form) --------------
-# =========================================================
 def _add_text_widget(page, name: str, rect: fitz.Rect):
     """Campo de texto com leve borda e fundo claro."""
     w = fitz.Widget()
@@ -97,7 +94,7 @@ def _add_text_widget(page, name: str, rect: fitz.Rect):
     _base_widget_style(w)
     try:
         w.border_width = 0.8
-        w.border_color = (0.85, 0.88, 0.88)  # cinza claro
+        w.border_color = (0.85, 0.88, 0.88)
         w.fill_color   = (1.0, 1.0, 1.0)
     except Exception:
         pass
@@ -138,11 +135,7 @@ def _add_checkbox_widget(page, name: str, rect: fitz.Rect, checked: bool = False
     _draw_rect_outline(page, sq)
     return sq
 
-
-
-# =========================================================
 # ---------------- Desenhos: Texto / Imagem ---------------
-# =========================================================
 def _tlen(text: str, fontsize: float, fontname: str) -> float:
     try:
         return fitz.get_text_length(text, fontsize=fontsize, fontname=fontname)
@@ -214,7 +207,6 @@ def _fit_lines_to_box(lines, rect: fitz.Rect, fs: float, fn: str):
             fs = new_fs
         else:
             fs = new_fs
-        # quebra linha a linha novamente
         recomputed = []
         for original in lines:
             recomputed.extend(_wrap_words(original, rect.width, fs, fn))
@@ -254,7 +246,6 @@ def _insert_text(page, rect: fitz.Rect, text: str, font: str, size: float, color
             x = r.x1 - tw
         else:                
             x = r.x0
-        # texto (tenta com a fonte pedida; se der ruim, cai para helv)
         try:
             page.insert_text((x, cur_y), ln, fontsize=fs, fontname=fn, color=rgb, render_mode=0)
         except Exception:
@@ -296,9 +287,7 @@ def _align_to_pdf(a) -> int:
     except Exception:
         return 0
 
-# =========================================================
 # ----------- Fallback: reconstruir do snapshot -----------
-# =========================================================
 def _rebuild_from_state(doc: fitz.Document, state_json: str):
     """Reconstrói textos / imagens se 'draws' veio vazio."""
     try:
@@ -323,9 +312,7 @@ def _rebuild_from_state(doc: fitz.Document, state_json: str):
     except Exception:
         pass
 
-# =========================================================
 # ------ Remoção de widgets nativos (form do PDF) ---------
-# =========================================================
 def _iou(r1: fitz.Rect, r2: fitz.Rect) -> float:
     """Intersection-over-Union simples para retângulos."""
     inter = r1 & r2  
@@ -424,9 +411,7 @@ def _remove_widgets_by_selectors(doc: fitz.Document, removals_data):
 
     return removed
 
-# =========================================================
 # ---------------------- Redactions -----------------------
-# =========================================================
 def _apply_redactions(doc: fitz.Document, redactions_data):
     if not isinstance(redactions_data, list) or not redactions_data:
         return 0
@@ -456,7 +441,6 @@ def _apply_redactions(doc: fitz.Document, redactions_data):
         # Cor de preenchimento (padrão branco)
         fill = _hex_to_rgb01(rd.get("fill") or "#FFFFFF")
 
-        # ---- encolhe o retângulo para não pegar linhas adjacentes ----
         rx0 = rect.x0 + SHRINK_ALL_PT
         ry0 = rect.y0 + SHRINK_ALL_PT
         rx1 = rect.x1 - SHRINK_ALL_PT
@@ -492,9 +476,7 @@ def _apply_redactions(doc: fitz.Document, redactions_data):
     return added
 
 
-# =========================================================
 # ------------------------ Endpoint -----------------------
-# =========================================================
 @router.post("/apply")
 def apply_fields(
     background_tasks: BackgroundTasks,
@@ -575,16 +557,16 @@ def apply_fields(
                     _insert_text(
                         page, rect,
                         text=d.get("text") or "",
-                        font=d.get("font") or "helv",  # virá mapeada (helv / bold / oblique / boldoblique)
+                        font=d.get("font") or "helv", 
                         size=_safe_float(d.get("size", 12.0), 12.0),
                         color_hex=d.get("color") or "#000000",
                         align_pdf=_align_to_pdf(d.get("align") or 0),
                     )
 
-                    # Sublinhado opcional (sem mexer na assinatura do _insert_text)
+                    # Sublinhado opcional
                     if bool(d.get("underline", False)):
                         rgb = _hex_to_rgb01(d.get("color") or "#000000")
-                        # sublinha a última linha do bloco (aprox. pela base do rect)
+                        # sublinha a última linha do bloco
                         y_line = rect.y1 - max(0.10 * _safe_float(d.get("size", 12.0), 12.0), 0.6)
                         sh = page.new_shape()
                         sh.draw_line((rect.x0, y_line), (rect.x1, y_line))
