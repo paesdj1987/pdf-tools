@@ -139,7 +139,7 @@ def _run_ocr(in_pdf: str, out_pdf: str, lang: str = "por", force_ocr: bool = Tru
         env["GS"] = gs
 
     try:
-        import ocrmypdf  # type: ignore
+        import ocrmypdf
         ocrmypdf.ocr(
             in_pdf,
             out_pdf,
@@ -148,12 +148,10 @@ def _run_ocr(in_pdf: str, out_pdf: str, lang: str = "por", force_ocr: bool = Tru
             deskew=True,
             optimize=1,
             progress_bar=False,
-            # passa env para plugins que consultam 'GS'
-            env=env,  # type: ignore[arg-type]
+            env=env,
         )
         return
     except Exception:
-        # tenta via comando externo
         pass
 
     # Subprocess (fallback)
@@ -169,7 +167,6 @@ def _run_ocr(in_pdf: str, out_pdf: str, lang: str = "por", force_ocr: bool = Tru
     try:
         subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
     except subprocess.CalledProcessError as e:
-        # Retorna stderr resumido
         std = (e.stderr or b"").decode(errors="ignore")
         if "language data" in std.lower():
             raise HTTPException(
